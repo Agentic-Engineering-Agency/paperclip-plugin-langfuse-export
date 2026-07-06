@@ -1,7 +1,7 @@
 import type { PaperclipPluginManifestV1 } from "@paperclipai/plugin-sdk";
 
 export const PLUGIN_ID = "langfuse-trace-export";
-const PLUGIN_VERSION = "0.2.0";
+const PLUGIN_VERSION = "0.3.0";
 
 const manifest: PaperclipPluginManifestV1 = {
   id: PLUGIN_ID,
@@ -36,6 +36,18 @@ const manifest: PaperclipPluginManifestV1 = {
         type: "string",
         title: "Langfuse base URL",
         description: "Defaults to LANGFUSE_BASE_URL or https://cloud.langfuse.com.",
+        default: "",
+      },
+      environment: {
+        type: "string",
+        title: "Tracing environment",
+        description: "Environment tag applied to every trace (e.g. production, development). Defaults to LANGFUSE_TRACING_ENVIRONMENT or 'production'.",
+        default: "production",
+      },
+      release: {
+        type: "string",
+        title: "Release identifier",
+        description: "Optional release/version tag applied to every trace. Defaults to LANGFUSE_RELEASE.",
         default: "",
       },
     },
