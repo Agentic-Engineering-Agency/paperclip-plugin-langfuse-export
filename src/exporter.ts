@@ -4,6 +4,13 @@ export interface LangfuseConfig {
   baseUrl: string;
 }
 
+const LANGFUSE_BATCH_SIZE = 50;
+const LANGFUSE_MAX_QUEUE_SIZE = 1000;
+
+export interface LangfuseExporterLogger {
+  warn(message: string): void;
+}
+
 export interface PaperclipTraceEvent {
   id?: string;
   type: string;
@@ -109,9 +116,14 @@ export class LangfuseExporter {
   constructor(
     private readonly config: LangfuseConfig,
     private readonly fetchImpl: typeof fetch = fetch,
+    private readonly logger: LangfuseExporterLogger = console,
   ) {}
 
   enqueue(event: PaperclipTraceEvent): void {
+    if (this.queue.length >= LANGFUSE_MAX_QUEUE_SIZE) {
+      this.queue.shift();
+      this.logger.warn(`Langfuse export queue full; dropped oldest event; queued=${this.queue.length}`);
+    }
     this.queue.push(mapPaperclipEvent(event));
   }
 
@@ -119,10 +131,19 @@ export class LangfuseExporter {
     return this.queue.length;
   }
 
+  private requeueBatch(batch: LangfuseIngestionEvent[]): void {
+    this.queue.unshift(...batch);
+    if (this.queue.length <= LANGFUSE_MAX_QUEUE_SIZE) return;
+
+    const dropped = this.queue.length - LANGFUSE_MAX_QUEUE_SIZE;
+    this.queue.splice(0, dropped);
+    this.logger.warn(`Langfuse export queue full; dropped ${dropped} oldest event${dropped === 1 ? "" : "s"}; queued=${this.queue.length}`);
+  }
+
   async flush(): Promise<void> {
     if (this.flushing || this.queue.length === 0) return;
     this.flushing = true;
-    const batch = this.queue.splice(0, 50);
+    const batch = this.queue.splice(0, LANGFUSE_BATCH_SIZE);
     try {
       const credentials = Buffer.from(`${this.config.publicKey}:${this.config.secretKey}`).toString("base64");
       const response = await this.fetchImpl(`${this.config.baseUrl}/api/public/ingestion`, {
@@ -134,11 +155,11 @@ export class LangfuseExporter {
         body: JSON.stringify({ batch }),
       });
       if (!response.ok) {
-        this.queue.unshift(...batch);
+        this.requeueBatch(batch);
         throw new Error(`Langfuse ingestion failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      if (this.queue[0] !== batch[0]) this.queue.unshift(...batch);
+      if (this.queue[0] !== batch[0]) this.requeueBatch(batch);
       throw error;
     } finally {
       this.flushing = false;

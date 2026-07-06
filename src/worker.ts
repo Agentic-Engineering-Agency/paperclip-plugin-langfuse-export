@@ -16,7 +16,7 @@ const plugin = definePlugin({
       return;
     }
 
-    const exporter = new LangfuseExporter(config);
+    const exporter = new LangfuseExporter(config, fetch, ctx.logger);
 
     ctx.data.register("exportTrace", async (params: Record<string, unknown>) => {
       exporter.enqueue(params as unknown as PaperclipTraceEvent);

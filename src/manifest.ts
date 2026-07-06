@@ -1,7 +1,7 @@
 import type { PaperclipPluginManifestV1 } from "@paperclipai/plugin-sdk";
 
 export const PLUGIN_ID = "langfuse-trace-export";
-const PLUGIN_VERSION = "0.1.0";
+const PLUGIN_VERSION = "0.2.0";
 
 const manifest: PaperclipPluginManifestV1 = {
   id: PLUGIN_ID,
@@ -13,8 +13,6 @@ const manifest: PaperclipPluginManifestV1 = {
   categories: ["connector"],
   capabilities: [
     "activity.log.write",
-    "plugin.state.read",
-    "plugin.state.write",
   ],
   entrypoints: {
     worker: "./dist/worker.js",

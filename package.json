@@ -1,6 +1,6 @@
 {
   "name": "@paperclipai/plugin-langfuse-trace-export",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Paperclip trace export plugin for Langfuse.",
   "type": "module",
   "exports": {

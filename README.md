@@ -14,9 +14,9 @@ Missing keys disable export without failing Paperclip core work.
 
 ## Worker API
 
-The worker registers `exportTrace` data action. It accepts a Paperclip trace event containing company/project/issue/agent/session/run/heartbeat/tool/cost/error metadata, maps tool events to Langfuse spans, maps other events to Langfuse events, and posts batches to `/api/public/ingestion`.
+The worker registers `exportTrace` data action. It accepts a Paperclip trace event containing company/project/issue/agent/session/run/heartbeat/tool/cost/error metadata, maps tool events to Langfuse spans, maps other events to Langfuse events, queues them in memory, and posts batches of up to 50 events to `/api/public/ingestion`.
 
-Failed Langfuse requests keep events queued and log a warning; they do not throw through the plugin action.
+Successful Langfuse requests remove the sent batch from the queue. Failed Langfuse requests put the batch back at the front, keep events queued for a later `exportTrace` call, and log a warning; they do not throw through the plugin action. The retry queue is capped at 1000 events so a persistently failing endpoint cannot grow memory unbounded. When the queue is full, the oldest event is dropped and a warning is logged.
 
 ## Verify
 
