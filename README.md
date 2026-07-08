@@ -1,4 +1,4 @@
-# @paperclipai/plugin-langfuse-trace-export
+# @agentic-engineering-agency/paperclip-plugin-langfuse-export
 
 Exports Paperclip trace-shaped events to [Langfuse](https://langfuse.com) ingestion, following Langfuse tracing best practices.
 
